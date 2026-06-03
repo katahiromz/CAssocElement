@@ -1,0 +1,45 @@
+struct IQuerySource
+{
+};
+
+struct IQuerySourceVtbl : IUnknownVtbl
+{
+  HRESULT (__stdcall *EnumValues)(void *, IEnumString **ppEnum);
+  HRESULT (__stdcall *EnumSources)(void *, IEnumString **ppEnum);
+  HRESULT (__stdcall *QueryValueString)(void *, PCWSTR keyName, PCWSTR valueName, PWSTR *ppszValue);
+  HRESULT (__stdcall *QueryValueDword)(void *, PCWSTR keyName, PCWSTR valueName, DWORD *pdwValue);
+  HRESULT (__stdcall *QueryValueExists)(void *, PCWSTR keyName, PCWSTR valueName);
+  HRESULT (__stdcall *QueryValueDirect)(void *, PCWSTR keyName, PCWSTR valueName, FLAGGED_BYTE_BLOB **ppBlob);
+  HRESULT (__stdcall *OpenSource)(void *, PCWSTR keyName, BOOL, IQuerySource **ppSource);
+  HRESULT (__stdcall *SetValueDirect)(void *, PCWSTR keyName, PCWSTR valueName, DWORD, DWORD, PBYTE);
+};
+
+struct IQuerySource
+{
+  IQuerySourceVtbl *lpVtbl;
+};
+
+struct IObjectWithQuerySourceVtbl : IUnknownVtbl
+{
+  HRESULT (__stdcall *SetSource)(void *, IQuerySource *pSource);
+  HRESULT (__stdcall *GetSource)(void *, const IID *riid, PVOID *ppSource);
+};
+
+struct IObjectWithQuerySource
+{
+  IObjectWithQuerySourceVtbl *lpVtbl;
+};
+
+struct IAssociationElementVtbl : IUnknownVtbl
+{
+  HRESULT (__stdcall *QueryString)(void *, ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue);
+  HRESULT (__stdcall *QueryDword)(void *, ASSOCQUERY query, PCWSTR key, DWORD *pdwValue);
+  HRESULT (__stdcall *QueryExists)(void *, ASSOCQUERY query, PCWSTR key);
+  HRESULT (__stdcall *QueryDirect)(void *, ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob);
+  HRESULT (__stdcall *QueryObject)(void *, ASSOCQUERY query, PCWSTR key, const IID *riid, PVOID *ppvObj);
+};
+
+struct IAssociationElement
+{
+  IAssociationElementVtbl *lpVtbl;
+};
