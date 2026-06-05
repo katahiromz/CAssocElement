@@ -8,6 +8,7 @@
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 #include <shlwapi_undoc.h>
+#include "CAssocElement.h"
 
 static PQUERYKEYVAL _FindKeyVal(ASSOCQUERY query, PQUERYKEYVAL pItems, UINT cItems)
 {
@@ -32,7 +33,7 @@ HRESULT SHAllocMUI(LPWSTR *ppwsz)
     return SHStrDupW(szOutBuf, ppwsz);
 }
 
-static HRESULT CALLBACK _QuerySourceDirect(
+HRESULT CALLBACK _QuerySourceDirect(
     IQuerySource *pSource,
     ASSOCQUERY query,
     PCWSTR keyName,
@@ -42,7 +43,7 @@ static HRESULT CALLBACK _QuerySourceDirect(
     return pSource->QueryValueDirect(keyName, valueName, (FLAGGED_BYTE_BLOB **)pValue);
 }
 
-static HRESULT CALLBACK _QuerySourceDword(
+HRESULT CALLBACK _QuerySourceDword(
     IQuerySource *pSource,
     ASSOCQUERY query,
     PCWSTR keyName,
@@ -52,7 +53,7 @@ static HRESULT CALLBACK _QuerySourceDword(
     return pSource->QueryValueDword(keyName, valueName, (DWORD *)pValue);
 }
 
-static HRESULT CALLBACK _QuerySourceExists(
+HRESULT CALLBACK _QuerySourceExists(
     IQuerySource *pSource,
     ASSOCQUERY query,
     PCWSTR keyName,
@@ -62,7 +63,7 @@ static HRESULT CALLBACK _QuerySourceExists(
     return pSource->QueryValueExists(keyName, valueName);
 }
 
-static HRESULT CALLBACK _QuerySourceString(
+HRESULT CALLBACK _QuerySourceString(
     IQuerySource *pSource,
     ASSOCQUERY query,
     PCWSTR keyName,

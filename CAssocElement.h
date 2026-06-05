@@ -7,16 +7,45 @@
 typedef struct QUERYKEYVAL
 {
     ASSOCQUERY query;
-    PWSTR key;
-    PWSTR value;
+    PCWSTR key;
+    PCWSTR value;
 } QUERYKEYVAL, *PQUERYKEYVAL;
 
 typedef HRESULT (CALLBACK* QUERY_CALLBACK)(IQuerySource*, ASSOCQUERY query, PCWSTR keyName, PCWSTR valueName, PVOID pValue);
 
+HRESULT SHAllocMUI(LPWSTR *ppwsz);
+
+HRESULT CALLBACK _QuerySourceDirect(
+    IQuerySource *pSource,
+    ASSOCQUERY query,
+    PCWSTR keyName,
+    PCWSTR valueName,
+    PVOID pValue);
+
+HRESULT CALLBACK _QuerySourceDword(
+    IQuerySource *pSource,
+    ASSOCQUERY query,
+    PCWSTR keyName,
+    PCWSTR valueName,
+    PVOID pValue);
+
+HRESULT CALLBACK _QuerySourceExists(
+    IQuerySource *pSource,
+    ASSOCQUERY query,
+    PCWSTR keyName,
+    PCWSTR valueName,
+    PVOID pValue);
+
+HRESULT CALLBACK _QuerySourceString(
+    IQuerySource *pSource,
+    ASSOCQUERY query,
+    PCWSTR keyName,
+    PCWSTR valueName,
+    PVOID pValue);
+
 /******************************************************************************
  * CAssocElement
  */
-
 class CAssocElement
     : public IObjectWithQuerySource
     , public IAssociationElement
@@ -59,5 +88,6 @@ public:
     STDMETHODIMP QueryDirect(ASSOCQUERY query, PCWSTR key, FLAGGED_BYTE_BLOB **ppBlob) override;
     STDMETHODIMP QueryObject(ASSOCQUERY query, PCWSTR key, REFIID riid, PVOID *ppvObj) override;
 
+protected:
     virtual UINT _GetQueryKeyVal(QUERYKEYVAL **ppItems);
 };
