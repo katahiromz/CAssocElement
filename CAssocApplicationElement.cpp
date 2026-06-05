@@ -86,9 +86,11 @@ VOID WINAPI PrettifyFileDescriptionW(_Out_ PWSTR pszTarget, _In_ PCWSTR pszCutLi
             if (pszMatch[lstrlenW(pszEntry)])
                 continue;
 
-            *pszMatch-- = UNICODE_NULL;
-            while (pszMatch >= pszTarget && *pszMatch == L' ')
-                *pszMatch-- = UNICODE_NULL;
+            while (pszMatch > pszTarget && pszMatch[-1] == L' ')
+            {
+                --pszMatch;
+                *pszMatch = UNICODE_NULL;
+            }
 
             break;
         }
@@ -134,7 +136,7 @@ BOOL WINAPI SHGetFileDescriptionW(
             pvBlock = LocalAlloc(LPTR, cbBlock);
             if (pvBlock && GetFileVersionInfoW(szPath, dwHandle, cbBlock, pvBlock))
             {
-                WCHAR szSubBlock[60];
+                WCHAR szSubBlock[128];
                 if (pszVerKey &&
                     SUCCEEDED(StringCchCopyW(szSubBlock, _countof(szSubBlock), pszVerKey)) &&
                     VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription))
@@ -153,7 +155,7 @@ BOOL WINAPI SHGetFileDescriptionW(
                         wnsprintfW(szSubBlock, _countof(szSubBlock),
                                    L"\\StringFileInfo\\%04X%04X\\FileDescription",
                                    langId, codePage);
-                        VerQueryValueW(pvBlock, szSubBlock, pvDescription, &cchDescription);
+                        VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
                         pszDescription = (PWSTR)pvDescription;
                     }
 
@@ -164,7 +166,7 @@ BOOL WINAPI SHGetFileDescriptionW(
                                             L"\\StringFileInfo\\040904B0\\FileDescription");
                         if (SUCCEEDED(hr))
                         {
-                            VerQueryValueW(pvBlock, szSubBlock, pvDescription, &cchDescription);
+                            VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
                             pszDescription = (PWSTR)pvDescription;
                         }
                     }
@@ -174,7 +176,7 @@ BOOL WINAPI SHGetFileDescriptionW(
                                 L"\\StringFileInfo\\040904E4\\FileDescription");
                         if (SUCCEEDED(hr))
                         {
-                            VerQueryValueW(pvBlock, szSubBlock, pvDescription, &cchDescription);
+                            VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
                             pszDescription = (PWSTR)pvDescription;
                         }
                     }
@@ -184,7 +186,7 @@ BOOL WINAPI SHGetFileDescriptionW(
                                             L"\\StringFileInfo\\04090000\\FileDescription");
                         if (SUCCEEDED(hr))
                         {
-                            VerQueryValueW(pvBlock, szSubBlock, pvDescription, &cchDescription);
+                            VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
                             pszDescription = (PWSTR)pvDescription;
                         }
                     }
