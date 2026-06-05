@@ -72,7 +72,7 @@ VOID WINAPI PrettifyFileDescriptionW(_Out_ PWSTR pszTarget, _In_ PCWSTR pszCutLi
 
     PCWSTR pszFreeList = NULL, pszList = pszCutList;
     PCWSTR pszAssoc = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileAssociation";
-    if (_AllocValueString(HKEY_LOCAL_MACHINE, pszAssoc, L"CutList", &pszFreeList))
+    if (_AllocValueString(HKEY_LOCAL_MACHINE, pszAssoc, L"CutList", &pszFreeList) == S_OK)
         pszList = pszFreeList;
 
     if (pszList && *pszList)
