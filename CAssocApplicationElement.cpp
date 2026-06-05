@@ -34,9 +34,9 @@ static void _MakeApplicationsKey(PCWSTR pszPath, PWSTR pszDest, UINT cchDest)
 static HRESULT
 _AllocValueString(
     HKEY hkey,
-    LPCWSTR pszSubKey,
-    LPCWSTR pszValue,
-    LPWSTR* ppszOut)
+    PCWSTR pszSubKey,
+    PCWSTR pszValue,
+    PWSTR* ppszOut)
 {
     *ppszOut = NULL;
 
@@ -120,7 +120,7 @@ BOOL WINAPI SHGetFileDescriptionW(
     PVOID pvDescription  = NULL;
     PWSTR pszDescription = NULL;
     UINT  cchDescription = 0;
-    PVOID pBlock = NULL;
+    PVOID pvBlock = NULL;
 
     BOOL bIsFile = !(pdwAttrs & FILE_ATTRIBUTE_DIRECTORY) &&
                    !PathIsUNCServerW(pszSrc) &&
@@ -131,13 +131,13 @@ BOOL WINAPI SHGetFileDescriptionW(
         DWORD cbBlock  = GetFileVersionInfoSizeW(szPath, &dwHandle);
         if (cbBlock)
         {
-            pBlock = LocalAlloc(LPTR, cbBlock);
-            if (pBlock && GetFileVersionInfoW(szPath, dwHandle, cbBlock, pBlock))
+            pvBlock = LocalAlloc(LPTR, cbBlock);
+            if (pvBlock && GetFileVersionInfoW(szPath, dwHandle, cbBlock, pvBlock))
             {
                 WCHAR szSubBlock[60];
                 if (pszVerKey &&
                     SUCCEEDED(StringCchCopyW(szSubBlock, _countof(szSubBlock), pszVerKey)) &&
-                    VerQueryValueW(pBlock, szSubBlock, &pvDescription, &cchDescription))
+                    VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription))
                 {
                     pszDescription = (PWSTR)pvDescription;
                 }
@@ -145,7 +145,7 @@ BOOL WINAPI SHGetFileDescriptionW(
                 {
                     LPVOID pTranslation = NULL;
                     UINT   cbTranslation = 0;
-                    if (VerQueryValueW(pBlock, L"\\VarFileInfo\\Translation", &pTranslation,
+                    if (VerQueryValueW(pvBlock, L"\\VarFileInfo\\Translation", &pTranslation,
                                        &cbTranslation) && cbTranslation)
                     {
                         UINT langId   = ((PWORD)pTranslation)[0];
@@ -153,7 +153,7 @@ BOOL WINAPI SHGetFileDescriptionW(
                         wnsprintfW(szSubBlock, _countof(szSubBlock),
                                    L"\\StringFileInfo\\%04X%04X\\FileDescription",
                                    langId, codePage);
-                        VerQueryValueW(pBlock, szSubBlock, pvDescription, &cchDescription);
+                        VerQueryValueW(pvBlock, szSubBlock, pvDescription, &cchDescription);
                         pszDescription = (PWSTR)pvDescription;
                     }
 
@@ -164,7 +164,7 @@ BOOL WINAPI SHGetFileDescriptionW(
                                             L"\\StringFileInfo\\040904B0\\FileDescription");
                         if (SUCCEEDED(hr))
                         {
-                            VerQueryValueW(pBlock, szSubBlock, pvDescription, &cchDescription);
+                            VerQueryValueW(pvBlock, szSubBlock, pvDescription, &cchDescription);
                             pszDescription = (PWSTR)pvDescription;
                         }
                     }
@@ -174,7 +174,7 @@ BOOL WINAPI SHGetFileDescriptionW(
                                 L"\\StringFileInfo\\040904E4\\FileDescription");
                         if (SUCCEEDED(hr))
                         {
-                            VerQueryValueW(pBlock, szSubBlock, pvDescription, &cchDescription);
+                            VerQueryValueW(pvBlock, szSubBlock, pvDescription, &cchDescription);
                             pszDescription = (PWSTR)pvDescription;
                         }
                     }
@@ -184,7 +184,7 @@ BOOL WINAPI SHGetFileDescriptionW(
                                             L"\\StringFileInfo\\04090000\\FileDescription");
                         if (SUCCEEDED(hr))
                         {
-                            VerQueryValueW(pBlock, szSubBlock, pvDescription, &cchDescription);
+                            VerQueryValueW(pvBlock, szSubBlock, pvDescription, &cchDescription);
                             pszDescription = (PWSTR)pvDescription;
                         }
                     }
@@ -214,8 +214,8 @@ BOOL WINAPI SHGetFileDescriptionW(
         *pcchOut = cchResult;
     }
 
-    if (pBlock)
-        LocalFree(pBlock);
+    if (pvBlock)
+        LocalFree(pvBlock);
 
     return TRUE;
 }
