@@ -60,9 +60,14 @@ _AllocValueString(
     return S_OK;
 }
 
-VOID WINAPI PrettifyFileDescriptionW(_In_ PCWSTR pszSource, _In_ PCWSTR pszCutList)
+/*************************************************************************
+ * PrettifyFileDescriptionW [SHLWAPI.492]
+ *
+ * @see SHGetFileDescriptionW
+ */
+VOID WINAPI PrettifyFileDescriptionW(_Out_ PWSTR pszTarget, _In_ PCWSTR pszCutList)
 {
-    if (!pszSource || !*pszSource)
+    if (!pszTarget || !*pszTarget)
         return;
 
     PCWSTR pszFreeList = NULL, pszList = pszCutList;
@@ -74,7 +79,7 @@ VOID WINAPI PrettifyFileDescriptionW(_In_ PCWSTR pszSource, _In_ PCWSTR pszCutLi
     {
         for (PCWSTR pszEntry = pszList; *pszEntry; pszEntry += lstrlenW(pszEntry) + 1)
         {
-            PWSTR pszMatch = StrRStrIW(pszSource, NULL, pszEntry);
+            PWSTR pszMatch = StrRStrIW(pszTarget, NULL, pszEntry);
             if (!pszMatch)
                 continue;
 
@@ -82,7 +87,7 @@ VOID WINAPI PrettifyFileDescriptionW(_In_ PCWSTR pszSource, _In_ PCWSTR pszCutLi
                 continue;
 
             *pszMatch-- = UNICODE_NULL;
-            while (pszMatch >= pszSource && *pszMatch == L' ')
+            while (pszMatch >= pszTarget && *pszMatch == L' ')
                 *pszMatch-- = UNICODE_NULL;
 
             break;
@@ -93,6 +98,11 @@ VOID WINAPI PrettifyFileDescriptionW(_In_ PCWSTR pszSource, _In_ PCWSTR pszCutLi
         LocalFree(pszFreeList);
 }
 
+/*************************************************************************
+ * SHGetFileDescriptionW [SHLWAPI.348]
+ *
+ * @see PrettifyFileDescriptionW
+ */
 BOOL WINAPI SHGetFileDescriptionW(
     _In_ PCWSTR pszSrc,
     _In_ PCWSTR pszVerKey,
