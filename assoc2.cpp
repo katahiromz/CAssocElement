@@ -19,57 +19,51 @@
 
 HRESULT AssocCreateElement(REFCLSID rclsid, REFIID riid, PVOID *ppvObj)
 {
+    IAssociationElement* pElement;
     if (rclsid == CLSID_AssocShellElement)
     {
-        CAssocShellElement* pElement = new CAssocShellElement();
-        HRESULT hr = pElement->QueryInterface(riid, ppvObj);
-        pElement->Release();
-        return hr;
+        CAssocShellElement* pNewElement = new CAssocShellElement();
+        pElement = static_cast<IAssociationElement*>(pNewElement);
     }
     if (rclsid == CLSID_AssocApplicationElement)
     {
-        CAssocApplicationElement* pElement = new CAssocApplicationElement();
-        HRESULT hr = pElement->QueryInterface(riid, ppvObj);
-        pElement->Release();
-        return hr;
+        CAssocApplicationElement* pNewElement = new CAssocApplicationElement();
+        pElement = static_cast<IAssociationElement*>(pNewElement);
     }
     if (rclsid == CLSID_AssocProgidElement)
     {
-        CAssocProgidElement* pElement = new CAssocProgidElement();
-        HRESULT hr = pElement->QueryInterface(riid, ppvObj);
-        pElement->Release();
-        return hr;
+        CAssocProgidElement* pNewElement = new CAssocProgidElement();
+        pElement = static_cast<IAssociationElement*>(pNewElement);
     }
     if (rclsid == CLSID_AssocClsidElement)
     {
-        CAssocClsidElement* pElement = new CAssocClsidElement();
-        HRESULT hr = pElement->QueryInterface(riid, ppvObj);
-        pElement->Release();
-        return hr;
+        CAssocClsidElement* pNewElement = new CAssocClsidElement();
+        pElement = static_cast<IAssociationElement*>(pNewElement);
     }
     if (rclsid == CLSID_AssocSystemElement)
     {
-        CAssocSystemExtElement* pElement = new CAssocSystemExtElement();
-        HRESULT hr = pElement->QueryInterface(riid, ppvObj);
-        pElement->Release();
-        return hr;
+        CAssocSystemExtElement* pNewElement = new CAssocSystemExtElement();
+        pElement = static_cast<IAssociationElement*>(pNewElement);
     }
     if (rclsid == CLSID_AssocFolderElement)
     {
-        CAssocFolderElement* pElement = new CAssocFolderElement();
-        HRESULT hr = pElement->QueryInterface(riid, ppvObj);
-        pElement->Release();
-        return hr;
+        CAssocFolderElement* pNewElement = new CAssocFolderElement();
+        pElement = static_cast<IAssociationElement*>(pNewElement);
     }
     if (rclsid == CLSID_AssocStarElement)
     {
-        CAssocStarElement* pElement = new CAssocStarElement();
-        HRESULT hr = pElement->QueryInterface(riid, ppvObj);
-        pElement->Release();
-        return hr;
+        CAssocStarElement* pNewElement = new CAssocStarElement();
+        pElement = static_cast<IAssociationElement*>(pNewElement);
     }
+    else
+    {
+        *ppvObj = NULL;
+        return CLASS_E_CLASSNOTAVAILABLE;
+    }
+
     // TODO: CLSID_AssocPerceivedElement
     // TODO: CLSID_AssocClientElement
-    *ppvObj = NULL;
-    return CLASS_E_CLASSNOTAVAILABLE;
+    HRESULT hr = pElement->QueryInterface(riid, ppvObj);
+    pElement->Release();
+    return hr;
 }
