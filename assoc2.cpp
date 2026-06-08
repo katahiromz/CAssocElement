@@ -25,32 +25,32 @@ HRESULT AssocCreateElement(REFCLSID rclsid, REFIID riid, PVOID *ppvObj)
         CAssocShellElement* pNewElement = new CAssocShellElement();
         pElement = static_cast<IAssociationElement*>(pNewElement);
     }
-    if (rclsid == CLSID_AssocApplicationElement)
+    else if (rclsid == CLSID_AssocApplicationElement)
     {
         CAssocApplicationElement* pNewElement = new CAssocApplicationElement();
         pElement = static_cast<IAssociationElement*>(pNewElement);
     }
-    if (rclsid == CLSID_AssocProgidElement)
+    else if (rclsid == CLSID_AssocProgidElement)
     {
         CAssocProgidElement* pNewElement = new CAssocProgidElement();
         pElement = static_cast<IAssociationElement*>(pNewElement);
     }
-    if (rclsid == CLSID_AssocClsidElement)
+    else if (rclsid == CLSID_AssocClsidElement)
     {
         CAssocClsidElement* pNewElement = new CAssocClsidElement();
         pElement = static_cast<IAssociationElement*>(pNewElement);
     }
-    if (rclsid == CLSID_AssocSystemElement)
+    else if (rclsid == CLSID_AssocSystemElement)
     {
         CAssocSystemExtElement* pNewElement = new CAssocSystemExtElement();
         pElement = static_cast<IAssociationElement*>(pNewElement);
     }
-    if (rclsid == CLSID_AssocFolderElement)
+    else if (rclsid == CLSID_AssocFolderElement)
     {
         CAssocFolderElement* pNewElement = new CAssocFolderElement();
         pElement = static_cast<IAssociationElement*>(pNewElement);
     }
-    if (rclsid == CLSID_AssocStarElement)
+    else if (rclsid == CLSID_AssocStarElement)
     {
         CAssocStarElement* pNewElement = new CAssocStarElement();
         pElement = static_cast<IAssociationElement*>(pNewElement);
