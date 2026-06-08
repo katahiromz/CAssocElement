@@ -1,4 +1,4 @@
-// CAssocClsidElement.h
+// CAssocSystemExtElement.h
 // Author: katahiromz
 // License: MIT
 
@@ -6,16 +6,10 @@
 
 #include "CAssocShellElement.h"
 
-HRESULT _QuerySourceCreateFromKey2(
-    HKEY    hKey,
-    PCWSTR  key1,
-    PCWSTR  key2,
-    IQuerySource **ppSource);
-
 /******************************************************************************
- * CAssocClsidElement
+ * CAssocSystemExtElement
  */
-class CAssocClsidElement
+class CAssocSystemExtElement
     : public CAssocShellElement
 {
 public:

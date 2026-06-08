@@ -10,6 +10,21 @@
 #include <shlwapi_undoc.h>
 #include "CAssocClsidElement.h"
 
+HRESULT _QuerySourceCreateFromKey2(
+    HKEY    hKey,
+    PCWSTR  key1,
+    PCWSTR  key2,
+    IQuerySource **ppSource)
+{
+    WCHAR szBuff[MAX_PATH];
+    if (!key1)
+        szBuff[0] = UNICODE_NULL;
+    else
+        _PathAppend(key1, key2, szBuff, 0x104);
+
+    return _QuerySourceCreateFromKey(hKey, szBuff, FALSE, ppSource);
+}
+
 /******************************************************************************
  * CAssocClsidElement
  */
