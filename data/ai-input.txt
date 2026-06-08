@@ -1,0 +1,405 @@
+﻿`SHEvaluateSystemCommandTemplate`関数を解読してください。
+
+```cxx
+PWSTR __stdcall _PathGetArgsLikeCreateProcess(LPCWSTR lpString)
+{
+  PWSTR pch; // eax
+
+  if ( *lpString == '"' )
+    pch = StrChrW(lpString + 1, '"');
+  else
+    pch = StrChrW(lpString, ' ');
+  if ( pch )
+    return pch + 1;
+  else
+    return (PWSTR)&lpString[lstrlenW(lpString)];
+}
+
+HRESULT __stdcall _CopyExe(PWSTR pszBuff, size_t cchBuff, PCWSTR pszSrc, size_t cchSrc)
+{
+  HRESULT hr; // edi
+
+  *pszBuff = 0;
+  hr = StringCchCatNW(pszBuff, cchBuff, pszSrc, cchSrc);
+  if ( hr >= 0 )
+    StrTrimW(pszBuff, L" \t");
+  return hr;
+}
+
+BOOL __stdcall _PathMatchesSuspicious(LPCWSTR lpString)
+{
+  int cch; // edi
+  WCHAR pszPath[260]; // [esp+8h] [ebp-20Ch] BYREF
+
+  cch = lstrlenW(lpString);
+  SHGetFolderPathW(0, CSIDL_PROGRAM_FILES, 0, 0, pszPath);
+  return StrCmpNIW(lpString, pszPath, cch) == 0;
+}
+
+PWSTR __stdcall _PathGuessNextBestArgs(PWSTR pszPath)
+{
+  PWSTR pch; // esi
+  BOOL bValid; // eax
+  WCHAR ch; // dx
+
+  pch = 0;
+  bValid = 1;
+  do
+  {
+    ch = *pszPath;
+    if ( !*pszPath )
+      break;
+    switch ( ch )
+    {
+      case ' ':
+        if ( !pch )
+          pch = pszPath;
+        break;
+      case '"':
+      case '%':
+        bValid = 0;
+        break;
+      case '\\':
+        bValid = !PathIsUNCW(pszPath);
+        if ( bValid )
+          pch = 0;
+        break;
+      default:
+        bValid = PathIsValidCharW(ch, 0x1E4);
+        break;
+    }
+    ++pszPath;
+  }
+  while ( bValid );
+  if ( pch )
+  {
+    while ( *pch == ' ' )
+      ++pch;
+    return pch;
+  }
+  else
+  {
+    if ( !bValid )
+      return 0;
+    return pszPath;
+  }
+}
+
+HRESULT _PathExeExists(LPWSTR pszPath)
+{
+    DWORD dwWhich = WHICH_PIF | WHICH_COM | WHICH_EXE | WHICH_BAT | WHICH_CMD | WHICH_OPTIONAL;
+    if (!PathFileExistsDefExtAndAttributesW(pszPath, WHICH_OPTIONAL, &dwWhich))
+        return CO_E_APPNOTFOUND;
+
+    return S_OK;
+}
+```
+
+```asm
+.text:77DA3963 ; HRESULT __stdcall SHEvaluateSystemCommandTemplate(PCWSTR pszCmdTemplate, PWSTR *ppszApplication, PWSTR *ppszCommandLine, PWSTR *ppszParameters)
+.text:77DA3963                 public _SHEvaluateSystemCommandTemplate@16
+.text:77DA3963 _SHEvaluateSystemCommandTemplate@16 proc near
+.text:77DA3963                                         ; CODE XREF: _ExeFromCmd(ushort const *,ushort * *)+35↑p
+.text:77DA3963                                         ; DATA XREF: .text:off_77DB4318↓o
+.text:77DA3963
+.text:77DA3963 ppData          = dword ptr -224h
+.text:77DA3963 var_220         = dword ptr -220h
+.text:77DA3963 lpString        = dword ptr -21Ch
+.text:77DA3963 ppwsz           = dword ptr -218h
+.text:77DA3963 var_214         = dword ptr -214h
+.text:77DA3963 psz             = dword ptr -210h
+.text:77DA3963 sz              = word ptr -20Ch
+.text:77DA3963 StackCookie     = dword ptr -4
+.text:77DA3963 pszCmdTemplate  = dword ptr  8
+.text:77DA3963 ppszApplication = dword ptr  0Ch
+.text:77DA3963 ppszCommandLine = dword ptr  10h
+.text:77DA3963 ppszParameters  = dword ptr  14h
+.text:77DA3963
+.text:77DA3963 ; FUNCTION CHUNK AT .text:77DC9180 SIZE 00000076 BYTES
+.text:77DA3963 ; FUNCTION CHUNK AT .text:77DC965A SIZE 00000007 BYTES
+.text:77DA3963 ; FUNCTION CHUNK AT .text:77DC966B SIZE 00000068 BYTES
+.text:77DA3963 ; FUNCTION CHUNK AT .text:77DD01BC SIZE 00000024 BYTES
+.text:77DA3963 ; FUNCTION CHUNK AT .text:77DD0212 SIZE 00000043 BYTES
+.text:77DA3963
+.text:77DA3963                 mov     edi, edi
+.text:77DA3965                 push    ebp
+.text:77DA3966                 mov     ebp, esp
+.text:77DA3968                 sub     esp, 224h
+.text:77DA396E                 mov     eax, ___security_cookie
+.text:77DA3973                 mov     [ebp+StackCookie], eax
+.text:77DA3976                 mov     eax, [ebp+ppszApplication]
+.text:77DA3979                 push    ebx
+.text:77DA397A                 mov     ebx, [ebp+pszCmdTemplate]
+.text:77DA397D                 mov     [ebp+ppwsz], eax
+.text:77DA3983                 mov     eax, [ebp+ppszCommandLine]
+.text:77DA3986                 push    esi
+.text:77DA3987                 push    edi
+.text:77DA3988                 mov     [ebp+ppData], eax
+.text:77DA398E                 mov     eax, [ebp+ppszParameters]
+.text:77DA3991                 push    ebx             ; lpString
+.text:77DA3992                 mov     [ebp+var_214], eax
+.text:77DA3998                 call    ?_PathGetArgsLikeCreateProcess@@YGPAGPBG@Z ; _PathGetArgsLikeCreateProcess(ushort const *)
+.text:77DA399D                 mov     [ebp+psz], eax
+.text:77DA39A3                 sub     eax, ebx
+.text:77DA39A5                 sar     eax, 1
+.text:77DA39A7                 push    eax             ; unsigned int
+.text:77DA39A8                 lea     ecx, [ebp+sz]
+.text:77DA39AE                 push    ebx             ; unsigned __int16 *
+.text:77DA39AF                 mov     edi, 104h
+.text:77DA39B4                 push    edi             ; unsigned int
+.text:77DA39B5                 mov     eax, ecx
+.text:77DA39B7                 push    eax             ; psz
+.text:77DA39B8                 mov     [ebp+lpString], ecx
+.text:77DA39BE                 call    ?_CopyExe@@YGJPAGIPBGI@Z ; _CopyExe(ushort *,uint,ushort const *,uint)
+.text:77DA39C3                 mov     esi, eax
+.text:77DA39C5                 test    esi, esi
+.text:77DA39C7                 jl      short loc_77DA3A23
+.text:77DA39C9                 xor     eax, eax
+.text:77DA39CB                 cmp     [ebp+sz], 22h ; '"'
+.text:77DA39D3                 setz    al
+.text:77DA39D6                 test    eax, eax
+.text:77DA39D8                 mov     [ebp+var_220], eax
+.text:77DA39DE                 jz      short loc_77DA39EC
+.text:77DA39E0                 lea     eax, [ebp+sz]
+.text:77DA39E6                 push    eax             ; lpsz
+.text:77DA39E7                 call    _PathUnquoteSpacesW@4 ; PathUnquoteSpacesW(x)
+.text:77DA39EC
+.text:77DA39EC loc_77DA39EC:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+7B↑j
+.text:77DA39EC                 lea     eax, [ebp+sz]
+.text:77DA39F2                 push    eax             ; pszPath
+.text:77DA39F3                 call    _PathIsAbsolute@4 ; PathIsAbsolute(x)
+.text:77DA39F8                 test    eax, eax
+.text:77DA39FA                 jz      loc_77DB02F8
+.text:77DA3A00                 cmp     [ebp+var_220], 0
+.text:77DA3A07                 jz      loc_77DC9180
+.text:77DA3A0D
+.text:77DA3A0D loc_77DA3A0D:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+2582B↓j
+.text:77DA3A0D                 lea     eax, [ebp+sz]
+.text:77DA3A13                 push    eax             ; pszPath
+.text:77DA3A14                 call    ?_PathExeExists@@YGJPAG@Z ; _PathExeExists(ushort *)
+.text:77DA3A19                 mov     esi, eax
+.text:77DA3A1B                 test    esi, esi
+.text:77DA3A1D                 jl      loc_77DD01BC
+.text:77DA3A23
+.text:77DA3A23 loc_77DA3A23:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+64↑j
+.text:77DA3A23                                         ; AssocGetUrlAction(x)+EA↓j ...
+.text:77DA3A23                 mov     ebx, [ebp+ppData]
+.text:77DA3A29                 mov     edi, [ebp+ppwsz]
+.text:77DA3A2F                 xor     ecx, ecx
+.text:77DA3A31                 cmp     ebx, ecx
+.text:77DA3A33                 mov     [edi], ecx
+.text:77DA3A35                 jnz     loc_77DC965A
+.text:77DA3A3B
+.text:77DA3A3B loc_77DA3A3B:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+25CF9↓j
+.text:77DA3A3B                 mov     eax, [ebp+var_214]
+.text:77DA3A41                 cmp     eax, ecx
+.text:77DA3A43                 jz      short loc_77DA3A47
+.text:77DA3A45                 mov     [eax], ecx
+.text:77DA3A47
+.text:77DA3A47 loc_77DA3A47:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+E0↑j
+.text:77DA3A47                 cmp     esi, ecx
+.text:77DA3A49                 jl      short loc_77DA3AA3
+.text:77DA3A4B                 push    edi             ; ppwsz
+.text:77DA3A4C                 lea     eax, [ebp+sz]
+.text:77DA3A52                 push    eax             ; psz
+.text:77DA3A53                 call    _SHStrDupW@8    ; SHStrDupW(x,x)
+.text:77DA3A58                 cmp     [ebp+psz], 0
+.text:77DA3A5F                 mov     esi, eax
+.text:77DA3A61                 jz      loc_77DD0212
+.text:77DA3A67
+.text:77DA3A67 loc_77DA3A67:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+2C8B9↓j
+.text:77DA3A67                 test    esi, esi
+.text:77DA3A69                 jl      loc_77DC966B
+.text:77DA3A6F                 test    ebx, ebx
+.text:77DA3A71                 jnz     loc_77DC967A
+.text:77DA3A77
+.text:77DA3A77 loc_77DA3A77:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+25D6B↓j
+.text:77DA3A77                 test    esi, esi
+.text:77DA3A79                 jl      loc_77DC966B
+.text:77DA3A7F                 cmp     [ebp+var_214], 0
+.text:77DA3A86                 jz      short loc_77DA3A9B
+.text:77DA3A88                 push    [ebp+var_214]   ; ppwsz
+.text:77DA3A8E                 push    [ebp+psz]       ; psz
+.text:77DA3A94                 call    _SHStrDupW@8    ; SHStrDupW(x,x)
+.text:77DA3A99                 mov     esi, eax
+.text:77DA3A9B
+.text:77DA3A9B loc_77DA3A9B:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+123↑j
+.text:77DA3A9B                 test    esi, esi
+.text:77DA3A9D                 jl      loc_77DC966B
+.text:77DA3AA3
+.text:77DA3AA3 loc_77DA3AA3:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+E6↑j
+.text:77DA3AA3                                         ; SHEvaluateSystemCommandTemplate(x,x,x,x)+2C8D4↓j ...
+.text:77DA3AA3                 mov     ecx, [ebp+StackCookie] ; StackCookie
+.text:77DA3AA6                 pop     edi
+.text:77DA3AA7                 mov     eax, esi
+.text:77DA3AA9                 pop     esi
+.text:77DA3AAA                 pop     ebx
+.text:77DA3AAB                 call    @__security_check_cookie@4 ; __security_check_cookie(x)
+.text:77DA3AB0                 leave
+.text:77DA3AB1                 retn    10h
+.text:77DA3AB1 _SHEvaluateSystemCommandTemplate@16 endp
+
+.text:77DC9180 loc_77DC9180:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+A4↑j
+.text:77DC9180                 lea     eax, [ebp+sz]
+.text:77DC9186                 push    eax             ; lpString
+.text:77DC9187                 call    ?_PathMatchesSuspicious@@YGHPBG@Z ; _PathMatchesSuspicious(ushort const *)
+.text:77DC918C                 test    eax, eax
+.text:77DC918E                 jz      loc_77DA3A0D
+.text:77DC9194                 mov     esi, 80070005h
+.text:77DC9199
+.text:77DC9199 loc_77DC9199:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+2C860↓j
+.text:77DC9199                                         ; SHEvaluateSystemCommandTemplate(x,x,x,x)+2C872↓j
+.text:77DC9199                 mov     eax, [ebp+psz]
+.text:77DC919F                 cmp     word ptr [eax], 0
+.text:77DC91A3                 jz      loc_77DA3A23
+.text:77DC91A9                 push    [ebp+psz]       ; pszPath
+.text:77DC91AF                 call    ?_PathGuessNextBestArgs@@YGPAGPBG@Z ; _PathGuessNextBestArgs(ushort const *)
+.text:77DC91B4                 test    eax, eax
+.text:77DC91B6                 mov     [ebp+psz], eax
+.text:77DC91BC                 jz      short loc_77DC91E9
+.text:77DC91BE                 sub     eax, ebx
+.text:77DC91C0                 sar     eax, 1
+.text:77DC91C2                 push    eax             ; unsigned int
+.text:77DC91C3                 push    ebx             ; unsigned __int16 *
+.text:77DC91C4                 push    edi             ; unsigned int
+.text:77DC91C5                 lea     eax, [ebp+sz]
+.text:77DC91CB                 push    eax             ; psz
+.text:77DC91CC                 call    ?_CopyExe@@YGJPAGIPBGI@Z ; _CopyExe(ushort *,uint,ushort const *,uint)
+.text:77DC91D1                 mov     esi, eax
+.text:77DC91D3                 test    esi, esi
+.text:77DC91D5                 jl      loc_77DD01CE
+.text:77DC91DB                 lea     eax, [ebp+sz]
+.text:77DC91E1                 push    eax             ; pszPath
+.text:77DC91E2                 call    ?_PathExeExists@@YGJPAG@Z ; _PathExeExists(ushort *)
+.text:77DC91E7                 mov     esi, eax
+.text:77DC91E9
+.text:77DC91E9 loc_77DC91E9:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+25859↑j
+.text:77DC91E9                 test    esi, esi
+.text:77DC91EB                 jge     loc_77DA3A23
+.text:77DC91F1                 jmp     loc_77DD01CE
+
+.text:77DD01BC loc_77DD01BC:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+BA↑j
+.text:77DD01BC                 cmp     [ebp+var_220], 0
+.text:77DD01C3                 jz      loc_77DC9199
+.text:77DD01C9                 jmp     loc_77DA3A23
+.text:77DD01CE loc_77DD01CE:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+25872↑j
+.text:77DD01CE                                         ; SHEvaluateSystemCommandTemplate(x,x,x,x)+2588E↑j
+.text:77DD01CE                 cmp     [ebp+psz], 0
+.text:77DD01D5                 jnz     loc_77DC9199
+.text:77DD01DB                 jmp     loc_77DA3A23
+
+.text:77DB02F8 loc_77DB02F8:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+97↑j
+.text:77DB02F8                 lea     eax, [ebp+pszPath]
+.text:77DB02FE                 push    eax             ; pszPath
+.text:77DB02FF                 call    _PathIsFileSpecW@4 ; PathIsFileSpecW(x)
+.text:77DB0304                 test    eax, eax
+.text:77DB0306                 jz      loc_77DC9661
+.text:77DB030C                 push    edi             ; unsigned int
+.text:77DB030D                 lea     eax, [ebp+pszPath]
+.text:77DB0313                 push    eax             ; pvData
+.text:77DB0314                 push    eax             ; pszPath
+.text:77DB0315                 call    ?_GetAppPath@@YGHPBGPAGK@Z ; _GetAppPath(ushort const *,ushort *,ulong)
+.text:77DB031A                 test    eax, eax
+.text:77DB031C                 jnz     loc_77DD01E0
+.text:77DB0322                 push    0               ; int
+.text:77DB0324                 push    offset _POLID_UsePathEnvVarForCommandTemplates ; struct _GUID *
+.text:77DB0329                 call    _SHWindowsPolicy@8 ; SHWindowsPolicy(x,x)
+.text:77DB032E                 test    eax, eax
+.text:77DB0330                 lea     eax, [ebp+pszPath]
+.text:77DB0336                 jnz     loc_77DD01F1
+.text:77DB033C                 push    edi             ; unsigned int
+.text:77DB033D                 push    eax             ; pszSrc
+.text:77DB033E                 call    ?_PathFindInSystem@@YGJPAGI@Z ; _PathFindInSystem(ushort *,uint)
+.text:77DB0343
+.text:77DB0343 loc_77DB0343:                           ; CODE XREF: AssocGetUrlAction(x)+1FF7F↓j
+.text:77DB0343                 mov     esi, eax
+.text:77DB0345
+.text:77DB0345 loc_77DB0345:                           ; CODE XREF: AssocGetUrlAction(x)+1FFA0↓j
+.text:77DB0345                 lea     eax, [ebp+pszPath]
+.text:77DB034B                 push    eax             ; pszPath
+.text:77DB034C                 call    _PathFindFileNameW@4 ; PathFindFileNameW(x)
+.text:77DB0351                 mov     [ebp+var_21C], eax
+.text:77DB0357                 jmp     loc_77DA3A23
+
+.text:77DC965A loc_77DC965A:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+D2↑j
+.text:77DC965A                 mov     [ebx], ecx
+.text:77DC965C                 jmp     loc_77DA3A3B
+.text:77DC965C ; END OF FUNCTION CHUNK FOR SHEvaluateSystemCommandTemplate(x,x,x,x)
+
+.text:77DD0212 loc_77DD0212:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+FE↑j
+.text:77DD0212                 mov     [ebp+psz], offset pszBase
+.text:77DD021C                 jmp     loc_77DA3A67
+.text:77DD0221 ; ---------------------------------------------------------------------------
+.text:77DD0221
+.text:77DD0221 loc_77DD0221:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+25D41↑j
+.text:77DD0221                 mov     edi, [ebp+ppwsz]
+.text:77DD0227                 jmp     loc_77DC966B
+.text:77DD022C loc_77DD022C:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+25D0C↑j
+.text:77DD022C                 push    eax             ; pv
+.text:77DD022D                 call    _CoTaskMemFree@4 ; CoTaskMemFree(x)
+.text:77DD0232                 and     dword ptr [edi], 0
+.text:77DD0235
+.text:77DD0235 loc_77DD0235:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+25D12↑j
+.text:77DD0235                 test    ebx, ebx
+.text:77DD0237                 jz      loc_77DA3AA3
+.text:77DD023D                 mov     eax, [ebx]
+.text:77DD023F                 test    eax, eax
+.text:77DD0241                 jz      loc_77DA3AA3
+.text:77DD0247                 push    eax             ; pv
+.text:77DD0248                 call    _CoTaskMemFree@4 ; CoTaskMemFree(x)
+.text:77DD024D                 and     dword ptr [ebx], 0
+.text:77DD0250                 jmp     loc_77DA3AA3
+
+.text:77DC966B loc_77DC966B:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+106↑j
+.text:77DC966B                                         ; SHEvaluateSystemCommandTemplate(x,x,x,x)+116↑j ...
+.text:77DC966B                 mov     eax, [edi]
+.text:77DC966D                 test    eax, eax
+.text:77DC966F                 jnz     loc_77DD022C
+.text:77DC9675                 jmp     loc_77DD0235
+
+.text:77DC967A loc_77DC967A:                           ; CODE XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+10E↑j
+.text:77DC967A                 push    [ebp+lpString]  ; lpString
+.text:77DC9680                 mov     esi, ds:__imp__lstrlenW@4 ; lstrlenW(x)
+.text:77DC9686                 call    esi ; lstrlenW(x) ; lstrlenW(x)
+.text:77DC9688                 push    [ebp+psz]       ; lpString
+.text:77DC968E                 mov     edi, eax
+.text:77DC9690                 call    esi ; lstrlenW(x) ; lstrlenW(x)
+.text:77DC9692                 lea     edi, [edi+eax+8]
+.text:77DC9696                 push    ebx             ; ppData
+.text:77DC9697                 lea     eax, [edi+edi]
+.text:77DC969A                 push    eax             ; cb
+.text:77DC969B                 call    ??$SHCoAlloc@U_FLAGGED_BYTE_BLOB@@@@YGJKPAPAU_FLAGGED_BYTE_BLOB@@@Z ; SHCoAlloc<_FLAGGED_BYTE_BLOB>(ulong,_FLAGGED_BYTE_BLOB * *)
+.text:77DC96A0                 mov     esi, eax
+.text:77DC96A2                 test    esi, esi
+.text:77DC96A4                 jl      loc_77DD0221
+.text:77DC96AA                 push    [ebp+psz]
+.text:77DC96B0                 push    [ebp+lpString]
+.text:77DC96B6                 push    offset aSS_2    ; "\"%s\" %s"
+.text:77DC96BB                 push    edi             ; unsigned int
+.text:77DC96BC                 push    dword ptr [ebx] ; Buffer
+.text:77DC96BE                 call    ?StringCchPrintfW@@YAJPAGIPBGZZ ; StringCchPrintfW(ushort *,uint,ushort const *,...)
+.text:77DC96C3                 mov     edi, [ebp+ppwsz]
+.text:77DC96C9                 add     esp, 14h
+.text:77DC96CC                 mov     esi, eax
+.text:77DC96CE                 jmp     loc_77DA3A77
+
+.text:77DC96D4 ; const wchar_t aSS_2
+.text:77DC96D4 aSS_2:                                  ; DATA XREF: SHEvaluateSystemCommandTemplate(x,x,x,x)+25D53↑o
+.text:77DC96D4                 text "UTF-16LE", '"%s" %s',0
+
+.text:77DD01F1 loc_77DD01F1:                           ; CODE XREF: AssocGetUrlAction(x)+C9↑j
+.text:77DD01F1                 push    3Fh ; '?'
+.text:77DD01F3                 push    0
+.text:77DD01F5                 push    eax
+.text:77DD01F6                 call    _PathFindOnPathExW@12 ; PathFindOnPathExW(x,x,x)
+.text:77DD01FB                 mov     esi, eax
+.text:77DD01FD                 neg     esi
+.text:77DD01FF                 sbb     esi, esi
+.text:77DD0201                 and     esi, 7FFBFE0Bh
+.text:77DD0207                 add     esi, 800401F5h
+.text:77DD020D                 jmp     loc_77DB0345
+
+.text:77DC9661 loc_77DC9661:                           ; CODE XREF: AssocGetUrlAction(x)+99↑j
+.text:77DC9661                 mov     esi, 80070005h
+.text:77DC9666                 jmp     loc_77DA3A23
+```

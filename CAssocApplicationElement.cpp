@@ -65,12 +65,13 @@ _AllocValueString(
  *
  * @see SHGetFileDescriptionW
  */
-VOID WINAPI PrettifyFileDescriptionW(_Out_ PWSTR pszTarget, _In_ PCWSTR pszCutList)
+VOID WINAPI PrettifyFileDescriptionW(_Inout_ PWSTR pszTarget, _In_opt_ PCWSTR pszCutList)
 {
     if (!pszTarget || !*pszTarget)
         return;
 
-    PCWSTR pszFreeList = NULL, pszList = pszCutList;
+    PWSTR pszFreeList = NULL;
+    PCWSTR pszList = pszCutList;
     PCWSTR pszAssoc = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileAssociation";
     if (_AllocValueString(HKEY_LOCAL_MACHINE, pszAssoc, L"CutList", &pszFreeList) == S_OK)
         pszList = pszFreeList;
@@ -86,6 +87,7 @@ VOID WINAPI PrettifyFileDescriptionW(_Out_ PWSTR pszTarget, _In_ PCWSTR pszCutLi
             if (pszMatch[lstrlenW(pszEntry)])
                 continue;
 
+            *pszMatch = UNICODE_NULL;
             while (pszMatch > pszTarget && pszMatch[-1] == L' ')
             {
                 --pszMatch;
@@ -107,20 +109,19 @@ VOID WINAPI PrettifyFileDescriptionW(_Out_ PWSTR pszTarget, _In_ PCWSTR pszCutLi
  */
 BOOL WINAPI SHGetFileDescriptionW(
     _In_ PCWSTR pszSrc,
-    _In_ PCWSTR pszVerKey,
+    _In_opt_ PCWSTR pszVerKey,
     _In_ PCWSTR pszDisplayName,
-    _Out_ PWSTR pszOut,
-    _Out_ PUINT pcchOut)
+    _Out_opt_ PWSTR pszOut,
+    _Inout_ PUINT pcchOut)
 {
     DWORD pdwAttrs = 0;
     if (!PathFileExistsAndAttributesW(pszSrc, &pdwAttrs))
         return FALSE;
 
     WCHAR szPath[MAX_PATH];
-    StrCpyNW(szPath, pszSrc, _countof(szPath));
+    StringCchCopyW(szPath, _countof(szPath), pszSrc);
 
     PVOID pvDescription  = NULL;
-    PWSTR pszDescription = NULL;
     UINT  cchDescription = 0;
     PVOID pvBlock = NULL;
 
@@ -136,65 +137,53 @@ BOOL WINAPI SHGetFileDescriptionW(
             pvBlock = LocalAlloc(LPTR, cbBlock);
             if (pvBlock && GetFileVersionInfoW(szPath, dwHandle, cbBlock, pvBlock))
             {
-                WCHAR szSubBlock[128];
-                if (pszVerKey &&
-                    SUCCEEDED(StringCchCopyW(szSubBlock, _countof(szSubBlock), pszVerKey)) &&
-                    VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription))
+                WCHAR szSubBlock[60];
+                BOOL ret = FALSE;
+                if (pszVerKey)
                 {
-                    pszDescription = (PWSTR)pvDescription;
+                    StringCchCopyW(szSubBlock, _countof(szSubBlock), pszVerKey);
+                    ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
                 }
-                else
+
+                if (!ret)
                 {
-                    LPVOID pTranslation = NULL;
-                    UINT   cbTranslation = 0;
+                    PVOID pTranslation = NULL;
+                    UINT cbTranslation = 0;
                     if (VerQueryValueW(pvBlock, L"\\VarFileInfo\\Translation", &pTranslation,
                                        &cbTranslation) && cbTranslation)
                     {
                         UINT langId   = ((PWORD)pTranslation)[0];
                         UINT codePage = ((PWORD)pTranslation)[1];
-                        wnsprintfW(szSubBlock, _countof(szSubBlock),
-                                   L"\\StringFileInfo\\%04X%04X\\FileDescription",
-                                   langId, codePage);
-                        VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
-                        pszDescription = (PWSTR)pvDescription;
+                        StringCchPrintfW(szSubBlock, _countof(szSubBlock),
+                                         L"\\StringFileInfo\\%04X%04X\\FileDescription",
+                                         langId, codePage);
+                        ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
                     }
+                }
 
-                    HRESULT hr;
-                    if (!pszDescription || !*pszDescription)
-                    {
-                        hr = StringCchCopyW(szSubBlock, _countof(szSubBlock),
-                                            L"\\StringFileInfo\\040904B0\\FileDescription");
-                        if (SUCCEEDED(hr))
-                        {
-                            VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
-                            pszDescription = (PWSTR)pvDescription;
-                        }
-                    }
-                    if (!pszDescription || !*pszDescription)
-                    {
-                        hr = StringCchCopyW(szSubBlock, _countof(szSubBlock),
-                                L"\\StringFileInfo\\040904E4\\FileDescription");
-                        if (SUCCEEDED(hr))
-                        {
-                            VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
-                            pszDescription = (PWSTR)pvDescription;
-                        }
-                    }
-                    if (!pszDescription || !*pszDescription)
-                    {
-                        hr = StringCchCopyW(szSubBlock, _countof(szSubBlock),
-                                            L"\\StringFileInfo\\04090000\\FileDescription");
-                        if (SUCCEEDED(hr))
-                        {
-                            VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
-                            pszDescription = (PWSTR)pvDescription;
-                        }
-                    }
+                if (!ret)
+                {
+                    StringCchCopyW(szSubBlock, _countof(szSubBlock),
+                                   L"\\StringFileInfo\\040904B0\\FileDescription");
+                    ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
+                }
+                if (!ret)
+                {
+                    StringCchCopyW(szSubBlock, _countof(szSubBlock),
+                                   L"\\StringFileInfo\\040904E4\\FileDescription");
+                    ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
+                }
+                if (!ret)
+                {
+                    StringCchCopyW(szSubBlock, _countof(szSubBlock),
+                                   L"\\StringFileInfo\\04090000\\FileDescription");
+                    ret = VerQueryValueW(pvBlock, szSubBlock, &pvDescription, &cchDescription);
                 }
             }
         }
     }
 
+    PWSTR pszDescription = (PWSTR)pvDescription;
     if (!pszDescription || !*pszDescription)
     {
         PathRemoveExtensionW(szPath);
