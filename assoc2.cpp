@@ -14,6 +14,7 @@
 #include "CAssocProgidElement.h"
 #include "CAssocClsidElement.h"
 #include "CAssocSystemExtElement.h"
+#include "CAssocFolderElement.h"
 
 HRESULT AssocCreateElement(REFCLSID rclsid, REFIID riid, PVOID *ppvObj)
 {
@@ -33,26 +34,33 @@ HRESULT AssocCreateElement(REFCLSID rclsid, REFIID riid, PVOID *ppvObj)
     }
     if (rclsid == CLSID_AssocProgidElement)
     {
-        CAssocProgidElement * pElement = new CAssocProgidElement();
+        CAssocProgidElement* pElement = new CAssocProgidElement();
         HRESULT hr = pElement->QueryInterface(riid, ppvObj);
         pElement->Release();
         return hr;
     }
     if (rclsid == CLSID_AssocClsidElement)
     {
-        CAssocClsidElement * pElement = new CAssocClsidElement();
+        CAssocClsidElement* pElement = new CAssocClsidElement();
         HRESULT hr = pElement->QueryInterface(riid, ppvObj);
         pElement->Release();
         return hr;
     }
     if (rclsid == CLSID_AssocSystemElement)
     {
-        CAssocSystemExtElement * pElement = new CAssocSystemExtElement();
+        CAssocSystemExtElement* pElement = new CAssocSystemExtElement();
         HRESULT hr = pElement->QueryInterface(riid, ppvObj);
         pElement->Release();
         return hr;
     }
-    // TODO: CLSID_AssocPerceivedElement, CLSID_AssocFolderElement, CLSID_AssocStarElement
+    if (rclsid == CLSID_AssocFolderElement)
+    {
+        CAssocFolderElement* pElement = new CAssocFolderElement();
+        HRESULT hr = pElement->QueryInterface(riid, ppvObj);
+        pElement->Release();
+        return hr;
+    }
+    // TODO: CLSID_AssocPerceivedElement, CLSID_AssocStarElement
     // TODO: CLSID_AssocClientElement
     *ppvObj = NULL;
     return CLASS_E_CLASSNOTAVAILABLE;
