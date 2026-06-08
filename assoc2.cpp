@@ -16,6 +16,8 @@
 #include "CAssocSystemExtElement.h"
 #include "CAssocFolderElement.h"
 #include "CAssocStarElement.h"
+#include "CAssocPerceivedElement.h"
+#include "CAssocClientElement.h"
 
 HRESULT AssocCreateElement(REFCLSID rclsid, REFIID riid, PVOID *ppvObj)
 {
@@ -55,14 +57,22 @@ HRESULT AssocCreateElement(REFCLSID rclsid, REFIID riid, PVOID *ppvObj)
         CAssocStarElement* pNewElement = new CAssocStarElement();
         pElement = static_cast<IAssociationElement*>(pNewElement);
     }
+    else if (rclsid == CLSID_AssocPerceivedElement)
+    {
+        CAssocPerceivedElement* pNewElement = new CAssocPerceivedElement();
+        pElement = static_cast<IAssociationElement*>(pNewElement);
+    }
+    else if (rclsid == CLSID_AssocClientElement)
+    {
+        CAssocClientElement* pNewElement = new CAssocClientElement();
+        pElement = static_cast<IAssociationElement*>(pNewElement);
+    }
     else
     {
         *ppvObj = NULL;
         return CLASS_E_CLASSNOTAVAILABLE;
     }
 
-    // TODO: CLSID_AssocPerceivedElement
-    // TODO: CLSID_AssocClientElement
     HRESULT hr = pElement->QueryInterface(riid, ppvObj);
     pElement->Release();
     return hr;
