@@ -1,4 +1,4 @@
-// CAssocFolderElement.h
+// CAssocStarElement.h
 // Author: katahiromz
 // License: MIT
 
@@ -9,7 +9,7 @@
 /******************************************************************************
  * CAssocFolderElement
  */
-class CAssocFolderElement
+class CAssocStarElement
     : public CAssocShellElement
 {
 protected:

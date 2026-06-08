@@ -16,6 +16,7 @@ HRESULT _SHAllocLoadString(HINSTANCE hInstance, UINT uID, LPWSTR *ppwsz)
     LoadStringW(hInstance, uID, szBuff, _countof(szBuff));
     return SHStrDupW(szBuff, ppwsz);
 }
+
 /******************************************************************************
  * CAssocFolderElement
  */
