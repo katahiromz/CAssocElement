@@ -39,7 +39,7 @@ STDMETHODIMP CAssocClientElement::QueryString(ASSOCQUERY query, PCWSTR key, PWST
         hr = CAssocElement::QueryString(0x1170001, L"LocalizedString", ppszValue);
         if (SUCCEEDED(hr))
             return hr;
-        return CAssocElement::QueryString(0x10F0000, 0, ppszValue);
+        return CAssocElement::QueryString(0x10F0000, NULL, ppszValue);
     }
 
     return CAssocShellElement::QueryString(query, key, ppszValue);
