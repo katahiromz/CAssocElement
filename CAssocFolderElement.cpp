@@ -24,8 +24,8 @@ HRESULT _SHAllocLoadString(HINSTANCE hInstance, UINT uID, LPWSTR *ppwsz)
 STDMETHODIMP CAssocFolderElement::QueryString(ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue)
 {
     if (query == 0x170000)
-        return _SHAllocLoadString(g_hinst, 0x1302u, ppszValue);
-    return CAssocShellElement::QueryString(this, query, key, ppszValue);
+        return _SHAllocLoadString(g_hinst, 0x1302, ppszValue);
+    return CAssocShellElement::QueryString(query, key, ppszValue);
 }
 
 STDMETHODIMP CAssocFolderElement::GetClassID(CLSID *pClassID)

@@ -205,7 +205,7 @@ HRESULT CAssocShellElement::_GetVerbDelegate(PCWSTR pszSrc, IAssociationElement 
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CAssocShellElement::QueryString(CAssocShellElementShift4* this, ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue)
+STDMETHODIMP CAssocShellElement::QueryString(ASSOCQUERY query, PCWSTR key, PWSTR *ppszValue)
 {
     if (!(query & 0x2000000))
         return CAssocElement::QueryString(query, key, ppszValue);
@@ -220,7 +220,7 @@ STDMETHODIMP CAssocShellElement::QueryString(CAssocShellElementShift4* this, ASS
     return hr;
 }
 
-STDMETHODIMP CAssocShellElement::QueryDword(CAssocShellElementShift4* this, ASSOCQUERY query, PCWSTR key, DWORD *pdwValue)
+STDMETHODIMP CAssocShellElement::QueryDword(ASSOCQUERY query, PCWSTR key, DWORD *pdwValue)
 {
     if (!(query & 0x2000000))
         return CAssocElement::QueryDword(query, key, pdwValue);
@@ -235,7 +235,7 @@ STDMETHODIMP CAssocShellElement::QueryDword(CAssocShellElementShift4* this, ASSO
     return hr;
 }
 
-STDMETHODIMP CAssocShellElement::QueryExists(CAssocShellElementShift4* this, ASSOCQUERY query, PCWSTR key)
+STDMETHODIMP CAssocShellElement::QueryExists(ASSOCQUERY query, PCWSTR key)
 {
     if (!(query & 0x2000000))
         return CAssocElement::QueryExists(query, valueName);
