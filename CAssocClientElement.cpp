@@ -24,11 +24,14 @@ STDMETHODIMP CAssocClientElement::QueryString(ASSOCQUERY query, PCWSTR key, PWST
         if (SUCCEEDED(hr))
             return hr;
 
-        return CAssocShellElement::_QueryVerbAny<unsigned short * *>(
-               (int (__stdcall *)(int, int, _DWORD, int))&this[-1].m_szBuff[62],
-               (int)_QueryString,
-               0x2010007,
-               (int)L"open");
+        IAssociationElement* pDelegate;
+        HRESULT hr = _GetVerbDelegate(key, &pDelegate);
+        if (FAILED(hr))
+            return hr;
+
+        hr = pDelegate->QueryString(0x2010007, L"open", ppszValue);
+        pDelegate->Release();
+        return hr;
     }
 
     if (query == 0x170000)

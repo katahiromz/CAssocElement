@@ -210,7 +210,7 @@ STDMETHODIMP CAssocShellElement::QueryString(ASSOCQUERY query, PCWSTR key, PWSTR
     if (!(query & 0x2000000))
         return CAssocElement::QueryString(query, key, ppszValue);
 
-    IAssociationElement *pDelegate = NULL;
+    IAssociationElement* pDelegate;
     HRESULT hr = _GetVerbDelegate(key, &pDelegate);
     if (FAILED(hr))
         return hr;
@@ -225,7 +225,7 @@ STDMETHODIMP CAssocShellElement::QueryDword(ASSOCQUERY query, PCWSTR key, DWORD 
     if (!(query & 0x2000000))
         return CAssocElement::QueryDword(query, key, pdwValue);
 
-    IAssociationElement *pDelegate = NULL;
+    IAssociationElement* pDelegate;
     HRESULT hr = _GetVerbDelegate(key, &pDelegate);
     if (FAILED(hr))
         return hr;
@@ -240,7 +240,7 @@ STDMETHODIMP CAssocShellElement::QueryExists(ASSOCQUERY query, PCWSTR key)
     if (!(query & 0x2000000))
         return CAssocElement::QueryExists(query, valueName);
 
-    IAssociationElement *pDelegate = NULL;
+    IAssociationElement* pDelegate;
     HRESULT hr = _GetVerbDelegate(key, &pDelegate);
     if (FAILED(hr))
         return hr;
@@ -255,7 +255,7 @@ STDMETHODIMP CAssocShellElement::QueryDirect(ASSOCQUERY query, PCWSTR key, FLAGG
     if (!(query & 0x2000000))
         return CAssocElement::QueryDirect(query, key, ppBlob);
 
-    IAssociationElement *pDelegate = NULL;
+    IAssociationElement* pDelegate;
     HRESULT hr = _GetVerbDelegate(key, &pDelegate);
     if (FAILED(hr))
         return hr;
@@ -272,7 +272,7 @@ STDMETHODIMP CAssocShellElement::QueryObject(ASSOCQUERY query, PCWSTR key, REFII
         return E_INVALIDARG;
     }
 
-    IAssociationElement *pDelegate = NULL;
+    IAssociationElement* pDelegate;
     HRESULT hr = _GetVerbDelegate(key, &pDelegate);
     if (FAILED(hr))
         return hr;
@@ -325,7 +325,7 @@ STDMETHODIMP CAssocShellElement::GetString(PWSTR *ppsz)
 
 HRESULT CAssocShellElement::_DefaultVerbSource(IQuerySource** ppSource)
 {
-    IQuerySource* pShellSource = NULL;
+    IQuerySource* pShellSource;
     HRESULT hr = m_pSource->OpenSource(L"shell", FALSE, &pShellSource);
     if (FAILED(hr))
         return hr;
