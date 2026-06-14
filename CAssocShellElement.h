@@ -7,6 +7,7 @@
 #include "CAssocElement.h"
 
 HRESULT _QuerySourceCreateFromKey(HKEY hKey, LPCWSTR lpSubKey, BOOL bCreate, IQuerySource **ppSource);
+HRESULT _ExeFromCmd(PCWSTR pszCmdTemplate, PWSTR* ppszApplication);
 
 /******************************************************************************
  * CAssocShellElement

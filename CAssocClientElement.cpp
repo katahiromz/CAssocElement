@@ -118,7 +118,7 @@ BOOL CAssocClientElement::_CreateRepairedNetscapeRegistration(HKEY hKey)
         StringCchCopyW(szIconFile, _countof(szIconFile), lpString2);
         SHFree(lpString2);
         PathQuoteSpacesW(szIconFile);
-        StringCchCatW(szIconFile, _countof(szIconFile) L" -mail");
+        StringCchCatW(szIconFile, _countof(szIconFile), L" -mail");
         if (_RegSetVolatileString(hKey, L"shell\\open\\command", szIconFile) == ERROR_SUCCESS)
             ret = TRUE;
     }
@@ -142,15 +142,15 @@ HRESULT CAssocClientElement::_InitSourceFromKey(HKEY hKey, PCWSTR lpSubKey, DWOR
     if (error == ERROR_SUCCESS && dwType == REG_SZ && szData[0] &&
         RegOpenKeyExW(HKEY_LOCAL_MACHINE, lpSubKey, 0, KEY_READ, &hkeySrc) == ERROR_SUCCESS)
     {
-        hr = _QuerySourceCreateFromKey2(hkeySrc, NULL, szData, &this2->m_pSource);
+        hr = _QuerySourceCreateFromKey2(hkeySrc, NULL, szData, &m_pSource);
         RegCloseKey(hkeySrc);
     }
 
     RegCloseKey(hKey2);
 
     if (FAILED(hr) ||
-        StrCmpICW(this3->m_pszName, L"mail") != 0 ||
-        StrCmpICW((LPCWSTR)szData, L"Netscape Messenger") != 0 ||
+        StrCmpICW(m_pszName, L"mail") != 0 ||
+        StrCmpICW(szData, L"Netscape Messenger") != 0 ||
         SUCCEEDED(QueryExists(0x2070000, L"open")))
     {
         return hr;
